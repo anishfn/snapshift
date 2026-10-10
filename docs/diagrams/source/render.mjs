@@ -5,6 +5,8 @@ const { chromium } = require(process.env.PLAYWRIGHT ?? "playwright");
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? undefined });
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
 page.on("pageerror", (e) => console.log("pageerror", String(e).slice(0, 400)));
+// the page warns when a label is wider than its box or its gap
+page.on("console", (m) => m.type() === "warning" && console.log("warning:", m.text()));
 // serve this folder first: python3 -m http.server 4455 --bind 127.0.0.1
 await page.goto("http://127.0.0.1:4455/diagrams.html");
 await page.waitForFunction(() => window.__done, null, { timeout: 180000 });

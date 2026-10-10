@@ -178,8 +178,14 @@ several options").
 `README.md` is written for an ADHD reader: a 30-second TL;DR, a "pick your path" table, a picture before each wall
 of text, short bullets, deep dives folded into `<details>`. Diagrams are real Excalidraw (`docs/diagrams/*.svg`,
 editable `.excalidraw` beside them), generated from `docs/diagrams/source/` with the Excalidraw library in headless
-Chromium; arrows are placed by hand there (Excalidraw only lays out bound arrows in its editor) and the page must
-declare UTF-8 or "·" and "→" turn to mojibake.
+Chromium (the page must declare UTF-8 or "·" and "→" turn to mojibake).
+
+**Diagrams are simple** ("fix these excalidraw diagrams... make simpler diagrams for all", after labels were
+struck through by their own arrows and ran into boxes): three to seven boxes, a few words each, big type; the
+detail lives in the README's text and tables, not in the picture. Nothing is ever written on an arrow: a label
+sits above or below its line, centred, and the gap between two boxes is wider than the label in it. A pair of
+arrows going both ways gets one label above the top one and one below the bottom one. Words in a box are centred
+with room around them. The generator warns when a label is wider than its box or its gap.
 
 ## Verify
 
@@ -226,3 +232,5 @@ test the UI without spending credits.
   context through the Codebase demo. Measured, not quoted: 137k tokens in 2.5 to 3s, 342k in 4.8s.
 - 2026-10-10: "Add more features like reading a GitHub repo and stuff, create UI for it as well": the attach menu
   and the repository / web page dialog.
+- 2026-10-10: "Fix these excalidraw diagrams, and make simpler diagrams for all": all six redrawn simply, with
+  labels beside the arrows instead of on them.

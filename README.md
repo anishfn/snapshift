@@ -91,7 +91,7 @@ Open **/components** in the running app to see and try every component with samp
 questions, and it gives back typed answers with probabilities. That turns out to be exactly what a "which UI
 should this be?" layer needs.
 
-![Snap's long memory in one call](docs/diagrams/snap-recall.svg)
+![Long context: Snap reads all of it, then picks what matters](docs/diagrams/snap-recall.svg)
 
 ### Every turn, one Snap call answers five things at once
 
@@ -103,7 +103,7 @@ should this be?" layer needs.
 | **Which files** should come back? | yes/no for each (up to 12 files), or one ranked choice (more than 12) | `a1, a2, a3` yes; or `map.tsx` 96% of 54 files |
 | **How long** should the text be? | score from 0 to 3 | `Short` |
 
-![Inside the one Snap call](docs/diagrams/snap-call.svg)
+![What Snap answers, in one call](docs/diagrams/snap-call.svg)
 
 It also answers three quick questions about **every image you attach** (what kind of image, light or dark, any
 readable text), so the writer knows what a picture is even when it can't see it.
@@ -430,8 +430,16 @@ Full rules live in `.claude/skills/taste/SKILL.md`. The ones that matter most:
 <summary><b>Editing the diagrams</b></summary>
 
 Each diagram has an `.excalidraw` file next to its `.svg`. Open it at [excalidraw.com](https://excalidraw.com)
-(File → Open), edit, and export SVG back into `docs/diagrams/`. To regenerate all of them from code, see
-`docs/diagrams/source/` (serve that folder, then run `render.mjs` with Playwright).
+(File → Open), edit, and export SVG back into `docs/diagrams/`.
+
+They are also generated from code, in `docs/diagrams/source/diagrams.html`: a handful of boxes each, few words.
+Three rules keep them readable, and the generator warns when one is broken:
+
+- nothing is written **on** an arrow: a label sits above or below its line
+- the gap between two boxes is wider than the label in it
+- a box is sized for its longest line
+
+To regenerate: serve `docs/diagrams/source/`, then run `render.mjs` with Playwright.
 
 </details>
 
