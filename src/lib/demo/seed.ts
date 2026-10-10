@@ -92,7 +92,7 @@ export const suggestions = [
 ];
 
 /**
- * The second demo: this app's own source, every file in one chat. About 135k tokens that Snap reads on each
+ * The second demo: this app's own source, every file in one chat. About 155k tokens that Snap reads on each
  * turn; the writer is handed only the file Snap picks. The files are a snapshot (scripts/codebase-demo.mjs).
  */
 export async function codebaseConversation(): Promise<Conversation> {
@@ -118,6 +118,55 @@ export async function codebaseConversation(): Promise<Conversation> {
       "Where do we make sure a quiz has exactly as many questions as asked? Show me that code.",
       "How does the document panel on the right get resized?",
       "Draw the folder structure of src as a tree.",
+    ],
+  };
+}
+
+// A day's support queue for a made-up notes app, with the two internal documents an agent works from and the
+// screenshots two customers attached. The pictures carry facts the text doesn't: the payment error code that
+// decides which team gets the ticket, and the two identical charges that make it a duplicate. Their captions say
+// only whose they are, so the answer has to come from looking.
+export async function supportConversation(): Promise<Conversation> {
+  const docs = await Promise.all(
+    (
+      [
+        ["tickets.csv", "text/csv"],
+        ["refund-policy.md", "text/markdown"],
+        ["routing-guide.md", "text/markdown"],
+      ] as const
+    ).map(async ([name, mediaType]) => ({ name, mediaType, text: await (await fetch(`/demo/support/${name}`)).text() })),
+  );
+  const artifacts: Record<string, Artifact> = {};
+  docs.forEach((d, i) => {
+    const id = `a${i + 1}`;
+    artifacts[id] = { id, kind: "doc", name: d.name, mediaType: d.mediaType, text: d.text, bytes: d.text.length };
+  });
+  artifacts.a4 = { id: "a4", kind: "image", name: "checkout-error.webp", mediaType: "image/webp", src: "/demo/support/checkout-error.webp", caption: "The screenshot attached to ticket T-1034.", bytes: 0 };
+  artifacts.a5 = { id: "a5", kind: "image", name: "bank-statement.webp", mediaType: "image/webp", src: "/demo/support/bank-statement.webp", caption: "The screenshot attached to ticket T-1031.", bytes: 0 };
+  const at = Date.now() - 10 * 60 * 1000;
+  const messages: Message[] = [
+    {
+      id: "m1",
+      role: "user",
+      text: "Here's today's support queue for Lumen (24 tickets), our refund policy, the routing guide, and the two screenshots customers attached. I'm on triage this morning.",
+      at,
+      seeded: true,
+      artifacts: Object.keys(artifacts),
+    },
+    { id: "m2", role: "assistant", text: "Got the queue, both documents and both screenshots. What do you want to work through first?", at: at + 20_000, seeded: true },
+  ];
+  return {
+    id: crypto.randomUUID(),
+    updatedAt: Date.now(),
+    title: "Support desk",
+    messages,
+    artifacts,
+    suggestions: [
+      "Look at the checkout screenshot: which team gets that ticket, and why?",
+      "Which refund requests do we approve under the policy, and which do we turn down?",
+      "Route every open ticket to a team, with a priority.",
+      "Draft the reply to the customer who was charged twice.",
+      "Chart the open tickets by team.",
     ],
   };
 }

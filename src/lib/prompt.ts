@@ -9,6 +9,9 @@ import type { Decision, TurnRequest } from "./types";
 // tokens of files: the decision model reads them all, the writer reads the two that matter. A writer that can see
 // also gets the images Snap looked at this turn; anything else reaches it as Snap's tags and any caption.
 
+/** With this little text shared in all (about 10k tokens), every document goes to the writer. */
+const SMALL = 30_000;
+
 const DEPTH = [
   "one line",
   "two or three sentences",
@@ -46,11 +49,8 @@ function files(req: TurnRequest, ids: string[] | undefined, docs: Writer["docs"]
   return (ids ?? []).flatMap((id): ContentPart[] => {
     const a = req.artifacts.find((x) => x.id === id);
     if (!a || a.kind !== "doc") return [];
-    if (docs === "text") {
-      if (a.text != null) return [{ type: "text", text: `The file "${a.name}" (id ${a.id}):\n\n${a.text}` }];
-      // PDFs go in as inline data, which Gemini reads
-      return a.base64 ? [{ type: "image_url", image_url: { url: `data:${a.mediaType};base64,${a.base64}` } }] : [];
-    }
+    // A PDF is already text by now (src/lib/pdf.ts): the free OpenRouter model rejects the file itself.
+    if (docs === "text") return a.text != null ? [{ type: "text", text: `The file "${a.name}" (id ${a.id}):\n\n${a.text}` }] : [];
     const data = a.text != null ? base64(a.text) : a.base64;
     if (!data) return [];
     return [{ type: "file", filename: a.name, mime_type: a.mediaType, file_data: data }];
@@ -64,8 +64,13 @@ export function writerMessages(req: TurnRequest, decision: Decision, w: Pick<Wri
   const picked = decision.artifacts.map((id) => req.artifacts.find((a) => a.id === id)).filter(Boolean);
   const extras = decision.extras ?? [];
   const newest = req.messages[req.messages.length - 1];
-  // the documents the writer reads: the ones Snap picked, and the ones that just arrived
-  const wanted = new Set([...decision.artifacts, ...(newest.artifacts ?? [])]);
+  // The documents the writer reads: the ones Snap picked, and the ones that just arrived. When everything shared
+  // is small, it all goes: picking is for when there is too much to hand over, and a short file left out can cost
+  // the answer (asked to reply to "the customer who was charged twice", Snap picked the policy and not the ticket
+  // list, and the writer addressed the wrong person).
+  const shared = req.artifacts.filter((a) => a.kind === "doc");
+  const small = shared.reduce((n, a) => n + (a.text?.length ?? 0), 0) <= SMALL;
+  const wanted = new Set([...decision.artifacts, ...(newest.artifacts ?? []), ...(small ? shared.map((a) => a.id) : [])]);
   const isDoc = (id: string) => req.artifacts.find((a) => a.id === id)?.kind === "doc";
 
   const system = [
@@ -91,7 +96,7 @@ export function writerMessages(req: TurnRequest, decision: Decision, w: Pick<Wri
     w.vision && req.images.length
       ? `You can see the images attached to the newest message: ${req.images.map((i) => i.id).join(", ")}, each labelled with its id. Describe only what you can actually see in them.`
       : "",
-    "In your prose, call a file by its name (src/lib/x.ts), never by its id and never as \"document a21\": ids are only for component fields that ask for an artifact.",
+    "In anything a person reads (the prose, a table cell, a list item), call a file or an image by its name (src/lib/x.ts, receipt.webp), never by its id and never as \"document a21\" or \"(a5)\": ids are only for component fields that ask for an artifact.",
     "When the user asks for a number of things (three questions, five ideas), give exactly that many.",
     "Write plainly: no hype, no em dashes, no headings. Markdown is limited to **bold**, `code` and simple - lists.",
   ]

@@ -15,6 +15,16 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 const short = (n: number) => (n >= 1000 ? `${n >= 100_000 ? Math.round(n / 1000) : (n / 1000).toFixed(1)}k` : `${n}`);
 const base = (name: string) => name.split("/").pop() ?? name;
 const secs = (ms: number) => (ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`);
+/**
+ * What the decision cost, from the tokens Snap reports and its list price: $0.09 per million input tokens, output
+ * free. In dollars ("use $", not the cent sign): 171k tokens is $0.015, a short turn $0.0002. Cached input is
+ * cheaper, so this is the most it can have cost.
+ */
+const USD_PER_MILLION = 0.09;
+const cost = (tokens: number) => {
+  const usd = (tokens * USD_PER_MILLION) / 1_000_000;
+  return usd < 0.00005 ? "under $0.0001" : `$${usd.toFixed(usd < 0.01 ? 4 : 3)}`;
+};
 
 /** How sure Snap was: of its one component, or of the set when the reply shows several (their shares add up). */
 const sureness = (d: Decision) =>
@@ -75,6 +85,8 @@ export function DecisionLine({
                   <span>{secs(decision.ms)}</span>
                   <span aria-hidden className="text-fg-6">·</span>
                   <span>{short(decision.inputTokens)} tokens read</span>
+                  <span aria-hidden className="text-fg-6">·</span>
+                  <span>{cost(decision.inputTokens)}</span>
                 </motion.button>
               )}
             >
@@ -153,6 +165,7 @@ function Breakdown({ decision, recallNumber, writer, writeMs }: { decision: Deci
         <Row label="Images looked at" value={decision.images} />
         <Row label="Read" value={`${decision.inputTokens.toLocaleString("en")} tokens`} />
         <Row label="Decided in" value={secs(decision.ms)} />
+        <Row label="Cost" value={`${cost(decision.inputTokens)}, at $${USD_PER_MILLION} per million tokens`} />
         {writer && <Row label="Written by" value={`${writer}${writeMs ? `, ${secs(writeMs)}` : ""}`} />}
       </div>
     </div>

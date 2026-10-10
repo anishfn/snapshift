@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useSyncExternalStore } from "react";
-import { FolderIcon, PlusIcon, SidebarIcon, SparkleIcon, TrashIcon } from "@/components/icons";
+import { FolderIcon, MailIcon, PlusIcon, SidebarIcon, SparkleIcon, TrashIcon } from "@/components/icons";
 import { easeOut, press } from "@/lib/motion";
 import type { Summary } from "@/lib/types";
 import { Mark } from "./mark";
@@ -73,6 +73,7 @@ export function Sidebar({
   onNew,
   onDemo,
   onCodebase,
+  onSupport,
   onDelete,
   instant,
 }: {
@@ -86,6 +87,7 @@ export function Sidebar({
   onNew: () => void;
   onDemo: () => void;
   onCodebase: () => void;
+  onSupport: () => void;
   onDelete: (id: string) => void;
 }) {
   const wide = useWide();
@@ -153,6 +155,10 @@ export function Sidebar({
           <motion.button type="button" whileTap={press} onClick={onCodebase} className={item}>
             <FolderIcon size={15} className="text-fg-4" />
             Codebase demo
+          </motion.button>
+          <motion.button type="button" whileTap={press} onClick={onSupport} className={item}>
+            <MailIcon size={15} className="text-fg-4" />
+            Support desk demo
           </motion.button>
         </div>
 

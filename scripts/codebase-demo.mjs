@@ -1,5 +1,5 @@
 // Snapshots this app's own source into public/demo/codebase.json, for the "Codebase demo": a chat holding every
-// source file at once (about 135k tokens), to show Snap deciding over a context that size.
+// source file at once (about 155k tokens), to show Snap deciding over a context that size.
 // Run after the code changes: node scripts/codebase-demo.mjs
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
