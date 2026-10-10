@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "subq",
+      "name": "snapshift",
       "dependencies": {
         "ai": "^7.0.137",
         "idb-keyval": "^6.3.0",

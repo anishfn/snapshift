@@ -16,8 +16,8 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "chat · SubQ Snap picks how every answer looks",
-  description: "A chat that keeps everything in context and lets SubQ Snap decide how to show each answer.",
+  title: "snapshift · SubQ Snap reads the whole chat and picks how every answer looks",
+  description: "SubQ Snap reads everything in the chat on every turn (messages, PDFs, images, spreadsheets, repositories) and decides how to show each answer.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

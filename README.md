@@ -1,9 +1,9 @@
-# chat · SubQ Snap picks how every answer looks
+# snapshift · SubQ Snap reads the whole chat and picks how every answer looks
 
-A chat app where **SubQ Snap** reads the *whole* conversation (every message, image and document) and decides,
-in about a second, **how each answer should look**: a chart, a map, a checklist, a quiz, a recipe, or just text.
-A second model, **the writer**, then fills that component in. Everything stays in context. Nothing gets summarised
-away.
+A chat app where **SubQ Snap** reads *everything in the conversation*, on every turn: every message, the text of
+every PDF and document, spreadsheets, web pages, whole GitHub repositories, and the images themselves. From all of
+it, it decides **how each answer should look**: a chart, a map, a checklist, a quiz, a recipe, or just text.
+A second model, **the writer**, then fills that in. Nothing gets summarised away.
 
 ![The big picture](docs/diagrams/big-picture.svg)
 
@@ -11,6 +11,10 @@ away.
 
 ## TL;DR (30 seconds)
 
+- **Snap reads all of it, every turn.** Messages, PDFs (their text), spreadsheets, web pages, repositories, and up
+  to 4 images at a time, in one call, up to 384k tokens. Measured: a 164-page PDF plus a 111-file repository,
+  **171k tokens, read and decided in 2 to 3.3 seconds**. Snap keeps nothing between turns: the app sends the
+  whole chat again each time, and Snap reads it again.
 - **Snap decides, the writer writes.** One fast Snap call picks the component (out of 29), the earlier message
   the answer depends on, which of your files to bring back, and how long to go. Then the writer fills it in.
 - **It remembers.** In the demo, Snap found a rule from **message 5 of 54** and picked **exactly the right 3 of 6
