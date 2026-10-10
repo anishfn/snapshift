@@ -1,0 +1,218 @@
+@import "tailwindcss";
+
+/* Anish's lab, in the dark: plain, minimal, rounded. The light text is the accent; colour only means something.
+   Text steps (fg to fg-5) all clear 4.5:1 on the page; fg-6 is for separators only. */
+:root {
+  color-scheme: dark;
+  --background: #0e0e0e;
+  --foreground: #969696;
+  --sidebar: #141414;
+  --surface: #1a1a1a;
+  --surface-hover: #212121;
+  /* filled controls on the page: user bubbles, chips, the meter */
+  --control: #1f1f1f;
+  --control-hover: #282828;
+  /* cards, the composer, popovers: a step up from the page */
+  --raised: #171717;
+  --fg: #ededed;
+  --fg-2: #c9c9c9;
+  --fg-3: #a8a8a8;
+  --fg-4: #969696;
+  --fg-5: #7c7c7c;
+  --fg-6: #474747;
+  --accent: #ededed;
+  --accent-fg: #0e0e0e;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.2);
+  /* keyboard focus: near-white, 14:1 or more against the page, the controls and the raised surface */
+  --focus: #ededed;
+  /* Chart series, in this order and never cycled: the dataviz reference's dark steps, validated on --raised
+     (#171717). The first three pass all-pairs (bars and lines cap at three); five are for split bars only. */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  /* status, never a series: always with an icon and words */
+  --good: #0ca30c;
+  --bad: #e66767;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sidebar: var(--sidebar);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-control: var(--control);
+  --color-control-hover: var(--control-hover);
+  --color-raised: var(--raised);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-fg-4: var(--fg-4);
+  --color-fg-5: var(--fg-5);
+  --color-fg-6: var(--fg-6);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-focus: var(--focus);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --color-series-4: var(--series-4);
+  --color-series-5: var(--series-5);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* On dark, depth is a hairline of light at the edge plus a deeper drop, not a soft grey shadow. */
+  --shadow-surface: 0 0 0 1px rgb(255 255 255 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.5), 0 2px 6px 0 rgb(0 0 0 / 0.35);
+  --shadow-faint: 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-popover: 0 0 0 1px rgb(255 255 255 / 0.09), 0 4px 8px -2px rgb(0 0 0 / 0.5), 0 12px 28px -4px rgb(0 0 0 / 0.6);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scrollbar-gutter: stable;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #3a3a3a;
+  color: #ffffff;
+}
+
+/* Loading placeholders: a soft sheen passing over the surface. Still under reduced motion. */
+@keyframes skeleton-sheen {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@utility skeleton {
+  background-color: var(--color-surface);
+  background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.05) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: skeleton-sheen 1.6s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* The keyboard focus ring for custom controls: 2px solid, 2px out. Forced colors fall back to Highlight. */
+@utility focus-ring {
+  outline: none;
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  @media (forced-colors: active) {
+    &:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}
+
+/* Text fields keep their fill on focus and ease in a soft two-layer ring (3:1 or more against page and fill). */
+@utility field-focus {
+  box-shadow: var(--shadow-surface), 0 0 0 2px rgb(237 237 237 / 0), 0 0 0 5px rgb(255 255 255 / 0);
+  &:focus-within {
+    box-shadow: var(--shadow-surface), 0 0 0 2px rgb(237 237 237 / 0.4), 0 0 0 5px rgb(255 255 255 / 0.05);
+  }
+}
+
+/* A row that scrolls sideways without showing a scrollbar (suggestions on a phone). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Streaming text: the caret that trails the words while the writer is still going. */
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@utility caret {
+  &::after {
+    content: "";
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    margin-inline-start: 2px;
+    vertical-align: -0.15em;
+    border-radius: 1px;
+    background: currentColor;
+    animation: caret-blink 1s steps(1) infinite;
+  }
+}
+
+/* A slider in the house style: a 4px track filled up to the thumb (--fill, 0% to 100%), a round thumb that grows a
+   touch while held, and the focus ring on the thumb. Used by the Calculator. */
+@utility range {
+  appearance: none;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--accent) var(--fill, 0%), rgb(255 255 255 / 0.1) var(--fill, 0%));
+  }
+  &::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--accent) var(--fill, 0%), rgb(255 255 255 / 0.1) var(--fill, 0%));
+  }
+  &::-webkit-slider-thumb {
+    appearance: none;
+    margin-top: -6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--raised), 0 1px 3px rgb(0 0 0 / 0.5);
+    transition: scale 150ms var(--ease-out);
+  }
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--raised), 0 1px 3px rgb(0 0 0 / 0.5);
+  }
+  &:active::-webkit-slider-thumb {
+    scale: 1.15;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+  &:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px var(--raised), 0 0 0 5px var(--focus);
+  }
+  &:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 3px var(--raised), 0 0 0 5px var(--focus);
+  }
+}

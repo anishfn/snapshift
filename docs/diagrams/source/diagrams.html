@@ -1,0 +1,194 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<script type="module">
+window.EXCALIDRAW_ASSET_PATH = "https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/";
+const ex = await import("https://esm.sh/@excalidraw/excalidraw@0.18.0?bundle-deps");
+
+// Excalidraw's own palette
+const C = { ink: "#1e1e1e", grey: "#868e96", blue: "#a5d8ff", green: "#b2f2bb", yellow: "#ffec99", red: "#ffc9c9", violet: "#d0bfff", sand: "#ffd8a8", paper: "#f8f9fa" };
+
+const geo = {};
+const box = (id, x, y, w, h, text, bg = C.paper, extra = {}) => (geo[id] = { x, y, w, h }, {
+  type: "rectangle", id, x, y, width: w, height: h, backgroundColor: bg, fillStyle: "solid", strokeColor: C.ink, strokeWidth: 2, roughness: 1, roundness: { type: 3 },
+  label: { text, fontSize: extra.fontSize ?? 18, textAlign: extra.align ?? "center", verticalAlign: extra.valign ?? "middle", strokeColor: C.ink }, ...extra.el,
+});
+const zone = (id, x, y, w, h, bg) => (geo[id] = { x, y, w, h }, { type: "rectangle", id, x, y, width: w, height: h, backgroundColor: bg, fillStyle: "hachure", strokeColor: C.grey, strokeStyle: "dashed", strokeWidth: 1, roughness: 1, roundness: { type: 3 }, opacity: 60 });
+const text = (x, y, t, size = 20, color = C.ink, extra = {}) => ({ type: "text", x, y, text: t, fontSize: size, strokeColor: color, ...extra });
+/**
+ * An arrow from one box's edge to another's, placed by hand (Excalidraw only lays out bound arrows inside its
+ * editor). `shift` moves it sideways, for a pair of arrows going both ways between the same two boxes.
+ */
+const arrow = (from, to, label, extra = {}, shift = 0) => {
+  const a = geo[from], b = geo[to];
+  const ac = { x: a.x + a.w / 2, y: a.y + a.h / 2 }, bc = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+  const horizontal = Math.abs(bc.x - ac.x) * a.h > Math.abs(bc.y - ac.y) * a.w;
+  let x1, y1, x2, y2;
+  if (horizontal) {
+    const right = bc.x > ac.x;
+    x1 = right ? a.x + a.w + 8 : a.x - 8;
+    x2 = right ? b.x - 8 : b.x + b.w + 8;
+    const yMid = (Math.max(a.y, b.y) + Math.min(a.y + a.h, b.y + b.h)) / 2;
+    const overlap = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 30;
+    y1 = (overlap ? yMid : ac.y) + shift;
+    y2 = (overlap ? yMid : bc.y) + shift;
+  } else {
+    const down = bc.y > ac.y;
+    y1 = down ? a.y + a.h + 8 : a.y - 8;
+    y2 = down ? b.y - 8 : b.y + b.h + 8;
+    const xMid = (Math.max(a.x, b.x) + Math.min(a.x + a.w, b.x + b.w)) / 2;
+    const overlap = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 30;
+    x1 = (overlap ? xMid : ac.x) + shift;
+    x2 = (overlap ? xMid : bc.x) + shift;
+  }
+  return {
+    type: "arrow", x: x1, y: y1, width: x2 - x1, height: y2 - y1, points: [[0, 0], [x2 - x1, y2 - y1]],
+    strokeColor: C.ink, strokeWidth: 2, roughness: 1, endArrowhead: "arrow",
+    ...(label && { label: { text: label, fontSize: 15, strokeColor: C.ink } }), ...extra,
+  };
+};
+const line = (x, y, dx, dy, extra = {}) => ({ type: "arrow", x, y, width: dx, height: dy, points: [[0, 0], [dx, dy]], strokeColor: C.ink, strokeWidth: 2, roughness: 1, ...extra });
+
+const diagrams = {
+  /* 1 ---------------------------------------------------------------- */
+  "big-picture": [
+    text(40, 10, "The big picture: who talks to whom", 30),
+    text(40, 52, "Snap decides HOW to show the answer. The writer writes WHAT it says.", 18, C.grey),
+
+    zone("zb", 30, 100, 330, 470, C.blue),
+    text(50, 115, "Your browser", 24),
+    box("ui", 55, 160, 280, 90, "Chat UI\n(Next.js page, React)", "#ffffff"),
+    box("idb", 55, 280, 280, 90, "IndexedDB\nevery conversation, saved", "#ffffff"),
+    box("files", 55, 400, 280, 130, "Your files\nimages shrunk to 1280px\nPDFs, Markdown, CSV, JSON", "#ffffff", { fontSize: 16 }),
+
+    zone("zs", 470, 100, 360, 470, C.yellow),
+    text(490, 115, "Next.js server", 24),
+    box("route", 495, 160, 310, 380, "POST /api/turn\n\n1. read PDFs into text\n2. ask Snap (one call)\n3. ask the writer\n4. stream everything back\n   as NDJSON lines", "#ffffff", { fontSize: 17, align: "left", valign: "top" }),
+
+    box("snap", 1010, 130, 330, 170, "SubQ Snap\nsubq-snap-preview\nDecisions API\n~1 to 2 seconds", C.violet, { fontSize: 18 }),
+    box("writer", 1010, 380, 330, 190, "The writer\nOpenRouter (free, default)\nor Gemini, or SubQ preview\npicked by WRITER in .env.local", C.green, { fontSize: 16 }),
+
+    arrow("ui", "route", "the conversation\n+ up to 4 images"),
+    arrow("route", "snap", "state + questions", {}, -22),
+    arrow("snap", "route", "typed answers", { strokeStyle: "dashed" }, 22),
+    arrow("route", "writer", "transcript + picked files\n+ decision + schema", {}, -26),
+    arrow("writer", "route", "JSON, streamed", { strokeStyle: "dashed" }, 26),
+  ],
+
+  /* 2 ---------------------------------------------------------------- */
+  "one-turn": [
+    text(40, 10, "One turn, from Enter to a finished component", 30),
+    line(60, 150, 1260, 0, { endArrowhead: "arrow", strokeColor: C.grey }),
+    text(1240, 160, "time", 16, C.grey),
+
+    box("t0", 40, 200, 200, 110, "You press\nEnter", C.blue),
+    box("t1", 290, 200, 230, 110, "Snap decides\n~1 to 2 s", C.violet),
+    box("t2", 570, 200, 230, 110, "Decision line\n+ skeleton\nappear", C.yellow, { fontSize: 17 }),
+    box("t3", 850, 200, 230, 110, "Writer streams\n3 to 37 s\n(depends on model)", C.green, { fontSize: 16 }),
+    box("t4", 1130, 200, 200, 110, "Component\nis ready", "#ffffff"),
+
+    arrow("t0", "t1"), arrow("t1", "t2"), arrow("t2", "t3"), arrow("t3", "t4"),
+
+    text(40, 350, "What you see on screen", 22),
+    text(40, 390, "· your message\n  rises in", 15),
+    text(290, 390, "· \"Snap is\n  deciding\" pulses", 15),
+    text(570, 390, "· \"Snap · Chart · 93%\"\n· the chart's shape\n  shimmers\n· \"From message 5\"", 15),
+    text(850, 390, "· words + a caret\n· items blur in\n· skeleton fades out", 15),
+    text(1130, 390, "· tick, sort, zoom\n· Copy / Ask again\n· saved locally", 15),
+
+    text(40, 520, "Events on the wire (one JSON object per line):", 18, C.grey),
+    text(40, 550, "{\"type\":\"decision\", ...}   →   {\"type\":\"partial\", ...} × many   →   {\"type\":\"done\", ...}   or   {\"type\":\"error\", ...}", 17, C.ink, { fontFamily: 3 }),
+  ],
+
+  /* 3 ---------------------------------------------------------------- */
+  "snap-call": [
+    text(40, 10, "Inside the one Snap call", 30),
+    text(40, 52, "Snap never writes text. It answers typed questions about everything it's given.", 18, C.grey),
+
+    zone("zin", 30, 100, 390, 430, C.blue),
+    text(50, 115, "state (what Snap reads)", 22),
+    box("s1", 55, 160, 340, 70, "the whole transcript\n(nothing summarised)", "#ffffff", { fontSize: 16 }),
+    box("s2", 55, 245, 340, 70, "every artifact: id, name,\ncaption, Snap's image tags", "#ffffff", { fontSize: 16 }),
+    box("s3", 55, 330, 340, 70, "the full text of every document\n(PDFs read on the server)", "#ffffff", { fontSize: 16 }),
+    box("s4", 55, 415, 340, 70, "up to 4 images, attached\n(newest first)", "#ffffff", { fontSize: 16 }),
+
+    box("call", 520, 250, 230, 120, "ONE call\nPOST /v1/systemone", C.violet, { fontSize: 20 }),
+
+    zone("zq", 850, 100, 450, 430, C.yellow),
+    text(870, 115, "questions (what Snap answers)", 22),
+    box("q1", 875, 160, 400, 70, "component: choice of 29\nalso: does it need a second one?", "#ffffff", { fontSize: 16 }),
+    box("q2", 875, 245, 400, 70, "recall: which earlier message\nmatters? (skipped on message 1)", "#ffffff", { fontSize: 16 }),
+    box("q3", 875, 330, 400, 70, "files: yes/no each, or one ranked\nchoice when there are many", "#ffffff", { fontSize: 16 }),
+    box("q4", 875, 415, 400, 70, "depth: one line / short /\ndetailed / thorough (score)", "#ffffff", { fontSize: 16 }),
+
+    box("out", 450, 470, 370, 110, "Decision\n{ component, confidence, recall,\n  artifacts, depth, ms, tokens }", C.green, { fontSize: 16 }),
+
+    arrow("zin", "call", "reads"), arrow("call", "zq", "answers"), arrow("call", "out", "probabilities + confidence"),
+  ],
+
+  /* 4 ---------------------------------------------------------------- */
+  "screen-map": [
+    text(40, 10, "The screen", 30),
+    box("frame", 40, 70, 1260, 580, "", "#ffffff", { el: { strokeWidth: 3 } }),
+    box("left", 60, 90, 240, 520, "Left sidebar\n\nNew chat\nDemo conversation\n\nToday\nYesterday\nPrevious 7 days\n\nWhat Snap chooses from", C.blue, { fontSize: 16, valign: "top" }),
+    box("head", 330, 90, 560, 60, "title                    context meter  22k / 384k", C.paper, { fontSize: 16 }),
+    box("dl", 330, 170, 560, 50, "Snap · Checklist · 92% · 2.1s   [From message 37]", C.violet, { fontSize: 16 }),
+    box("prose", 330, 235, 560, 60, "the writer's prose", "#ffffff", { fontSize: 16 }),
+    box("card", 330, 310, 560, 150, "the component Snap picked\n(chart, checklist, map, quiz ...)\ninteractive, saved as you use it", C.green, { fontSize: 16 }),
+    box("acts", 330, 470, 200, 40, "Copy · Ask again", C.paper, { fontSize: 15 }),
+    box("comp", 330, 530, 560, 80, "composer: paperclip, drop files, Enter to send", C.yellow, { fontSize: 16 }),
+    box("right", 920, 90, 360, 520, "Document panel\n(slides in from the right)\n\nPDF pages, zoom, page x / n\nMarkdown, CSV table, JSON\n\ncopy · download · close\ndrag the left edge to resize", C.sand, { fontSize: 16, valign: "top" }),
+    text(920, 625, "opens when you click a PDF or doc chip", 15, C.grey),
+  ],
+
+  /* 5 ---------------------------------------------------------------- */
+  "component-life": [
+    text(40, 10, "A component's life", 30),
+    box("c1", 40, 100, 200, 120, "skeleton\n(the chosen shape,\nshimmering)", C.yellow, { fontSize: 17 }),
+    box("c2", 330, 100, 200, 120, "streaming\nhalf-built JSON,\nitems blur in", C.violet, { fontSize: 17 }),
+    box("c3", 620, 100, 200, 120, "ready\nsettled = true", C.green, { fontSize: 17 }),
+    box("c4", 910, 100, 200, 120, "you use it\ntick · sort · answer\n· edit · zoom", C.blue, { fontSize: 16 }),
+    box("c5", 1200, 100, 200, 120, "saved\nonChange → setData\n→ IndexedDB", "#ffffff", { fontSize: 16 }),
+    arrow("c1", "c2", "first data"), arrow("c2", "c3", "done"), arrow("c3", "c4"), arrow("c4", "c5"),
+    box("c6", 600, 300, 260, 110, "nothing usable came?\n\"The chart didn't come\nthrough\" + Ask again", C.red, { fontSize: 16 }),
+    arrow("c2", "c6", "done, but empty", { strokeStyle: "dashed" }),
+    text(40, 450, "Every component has: a skeleton in its own shape · a ready() check · a plain-text form for Copy · a sample on /components", 18, C.grey),
+  ],
+
+  /* 6 ---------------------------------------------------------------- */
+  "snap-recall": [
+    text(40, 10, "Snap's party trick: long memory, in one call", 30),
+    text(40, 52, "The demo: 54 messages, 6 images, an 80 KB doc. Then: \"Which three should go on the homepage?\"", 18, C.grey),
+
+    zone("conv", 30, 100, 420, 560, C.blue),
+    text(50, 112, "the conversation (all of it)", 20),
+    box("m1", 55, 150, 370, 44, "message 1 · \"I'm redoing the homepage...\"", "#ffffff", { fontSize: 15 }),
+    box("m5", 55, 205, 370, 64, "message 5 · \"nothing with WebGL above\nthe fold\"  ← the rule", C.yellow, { fontSize: 15 }),
+    box("m17", 55, 280, 370, 44, "message 17 · 3 share cards attached", "#ffffff", { fontSize: 15 }),
+    box("m23", 55, 335, 370, 44, "message 23 · 3 more share cards", "#ffffff", { fontSize: 15 }),
+    box("m29", 55, 390, 370, 44, "message 29 · lab-taste.md (80 KB)", "#ffffff", { fontSize: 15 }),
+    text(220, 445, "· · ·", 22, C.grey),
+    box("m55", 55, 590, 370, 50, "message 55 · \"Which three should go\non the homepage?\"", C.blue, { fontSize: 15 }),
+
+    box("snap", 560, 330, 260, 130, "SubQ Snap\none call\n29,215 tokens read\n2.3 s", C.violet, { fontSize: 17 }),
+
+    zone("ans", 920, 100, 420, 560, C.green),
+    text(940, 112, "what came back", 20),
+    box("a1", 945, 150, 370, 70, "component = Comparison\n81% (Text 13%, Decision 3%)", "#ffffff", { fontSize: 15 }),
+    box("a2", 945, 235, 370, 70, "recall = message 5\nthe WebGL rule, 50 messages back", C.yellow, { fontSize: 15 }),
+    box("a3", 945, 320, 370, 90, "artifacts = a1, a2, a3\nexactly the 3 non-WebGL cards\n(a4, a5, a6 left out)", "#ffffff", { fontSize: 15 }),
+    box("a4", 945, 425, 370, 50, "depth = Short", "#ffffff", { fontSize: 15 }),
+    box("a5", 945, 490, 370, 140, "then the writer fills the cards:\nFolder maker · Handdrawn frames\n· Dia gradient, each marked Pick,\nwith \"going by your rule\nfrom message 5\"", "#ffffff", { fontSize: 15 }),
+
+    arrow("conv", "snap", "everything,\nnot a summary"),
+    arrow("snap", "ans", "typed answers\n+ probabilities"),
+  ],
+};
+
+window.__out = {};
+for (const [name, skel] of Object.entries(diagrams)) {
+  const elements = ex.convertToExcalidrawElements(skel, { regenerateIds: false });
+  const appState = { exportBackground: true, viewBackgroundColor: "#ffffff", exportPadding: 24 };
+  const svg = await ex.exportToSvg({ elements, appState, files: null });
+  window.__out[name] = { svg: svg.outerHTML, json: ex.serializeAsJSON(elements, { viewBackgroundColor: "#ffffff" }, {}, "local") };
+}
+window.__done = true;
+</script></body></html>
