@@ -256,3 +256,8 @@ test the UI without spending credits.
   say which model did the reading: Snap for the decision, the writer for the words.
 - 2026-10-10: "Whats this, use $" about the cent sign on the decision line: costs are always written in dollars
   (`$0.0002`, `$0.015`), never with ¢.
+- 2026-10-11: "I dont like this, its too long and whatever" about "How Snap decided" (29 rows, most at 0%, and
+  rows that wrapped): the panel leads with the three to six components Snap gave real weight and folds the rest
+  behind "Show 24 more"; rows that say nothing ("nothing earlier", "none", 0 images) are left out; no row wraps
+  (cost is just the amount, the writer is the model's short name, picked files are the first name and "+1").
+  Popovers stay short: what matters first, the full list on request.
