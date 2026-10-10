@@ -3,7 +3,7 @@ name: taste
 description: Anish's taste and the house rules for this chat (SubQ Snap picks how each answer looks). Use whenever adding, editing or reviewing anything here (components, layout, copy, motion, icons, colour), and update this file whenever Anish reveals more of their taste.
 ---
 
-# chat, to Anish's taste
+# snapshift, to Anish's taste
 
 A chat where SubQ Snap (`subq-snap-preview`, Decisions API) reads the whole conversation every turn and decides
 which component shows the answer, which earlier message it depends on and which artifacts to bring back; the writer
@@ -234,3 +234,4 @@ test the UI without spending credits.
   and the repository / web page dialog.
 - 2026-10-10: "Fix these excalidraw diagrams, and make simpler diagrams for all": all six redrawn simply, with
   labels beside the arrows instead of on them.
+- 2026-10-10: The app is called snapshift now: in the sidebar, the page title, the package and the repository.

@@ -182,7 +182,7 @@ export async function write(input: {
   const post = (stream: boolean) =>
     fetch(`${w.base}/chat/completions`, {
       method: "POST",
-      headers: { ...headers(w.envKey), ...(w.name === "openrouter" && { "X-Title": "chat" }) },
+      headers: { ...headers(w.envKey), ...(w.name === "openrouter" && { "X-Title": "snapshift" }) },
       body: body(stream),
       signal: input.signal,
     });

@@ -128,7 +128,7 @@ export function Sidebar({
         <div className="flex h-[76px] shrink-0 items-center justify-between ps-5 pe-3">
           <span className="flex items-center gap-2 text-[15px]">
             <Mark />
-            <span className="font-medium tracking-[-0.01em] text-fg">chat</span>
+            <span className="font-medium tracking-[-0.01em] text-fg">snapshift</span>
           </span>
           <motion.button
             type="button"
