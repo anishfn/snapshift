@@ -1,12 +1,12 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { BoltIcon, NoteIcon, QuoteIcon } from "@/components/icons";
-import { blockIds, blocks } from "@/lib/blocks";
+import { blockIds, blocks, type BlockId } from "@/lib/blocks";
 import { easeOut, iconSwap, press } from "@/lib/motion";
 import type { Decision } from "@/lib/types";
-import { ArtifactsContext } from "./blocks/shared";
+import { ArtifactsContext, MoreToggle } from "./blocks/shared";
 import { Popover, Row } from "./popover";
 import { DocViewerContext } from "./viewer/doc-panel";
 
@@ -127,46 +127,86 @@ export function DecisionLine({
   );
 }
 
+/** The model's name without its provider and tier: "dots-studio/dots-3-note-preview:free" reads as "dots-3-note-preview". */
+const model = (name: string) => base(name).replace(/:.*$/, "");
+/** The options worth showing straight away: the ones Snap gave any real weight, at least three and at most six. */
+const LEAD_MIN = 3;
+const LEAD_MAX = 6;
+
+/** The files Snap picked on one line: the first by name, the rest as a count (all of them in the tooltip). */
+function Picked({ names }: { names: string[] }) {
+  return (
+    <span title={names.join(", ")} className="flex max-w-[11.5rem] items-baseline gap-1">
+      <span className="truncate">{names[0]}</span>
+      {names.length > 1 && <span className="shrink-0 text-fg-4">+{names.length - 1}</span>}
+    </span>
+  );
+}
+
+function Weighed({ id, decision }: { id: BlockId; decision: Decision }) {
+  const p = decision.probabilities[id] ?? 0;
+  const chosen = id === decision.component || !!decision.extras?.includes(id);
+  return (
+    <div className="grid h-5 grid-cols-[5.5rem_1fr_2.5rem] items-center gap-2 text-[12px] tabular-nums">
+      <span className={chosen ? "font-medium text-fg" : "text-fg-3"}>{blocks[id].label}</span>
+      <div className="h-1 overflow-hidden rounded-full bg-white/[0.08]">
+        <div className={`h-full origin-left rounded-full ${chosen ? "bg-accent" : "bg-fg-5"}`} style={{ transform: `scaleX(${p})` }} />
+      </div>
+      <span className="text-end text-fg-4">{pct(p)}</span>
+    </div>
+  );
+}
+
+/**
+ * How Snap decided, kept short: the few components it gave real weight (the other twenty-odd, all near zero, fold
+ * away), then only the rows that say something. Time, tokens and cost are already on the line above; the exact
+ * count and the price stay here in two short rows.
+ */
 function Breakdown({ decision, recallNumber, writer, writeMs }: { decision: Decision; recallNumber?: number; writer?: string; writeMs?: number }) {
   const artifacts = useContext(ArtifactsContext);
+  const [all, setAll] = useState(false);
   const shared = Object.keys(artifacts).length;
   const ranked = [...blockIds].sort((a, b) => (decision.probabilities[b] ?? 0) - (decision.probabilities[a] ?? 0));
+  const weighty = ranked.filter((id) => (decision.probabilities[id] ?? 0) >= 0.005).length;
+  const lead = Math.min(LEAD_MAX, Math.max(LEAD_MIN, weighty));
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[12px] text-fg-4">Components Snap weighed</span>
-        {ranked.map((id) => {
-          const p = decision.probabilities[id] ?? 0;
-          const chosen = id === decision.component;
-          return (
-            <div key={id} className="grid grid-cols-[5.5rem_1fr_2.5rem] items-center gap-2 text-[12px] tabular-nums">
-              <span className={chosen ? "font-medium text-fg" : "text-fg-3"}>{blocks[id].label}</span>
-              <div className="h-1 overflow-hidden rounded-full bg-white/[0.08]">
-                <div
-                  className={`h-full origin-left rounded-full ${chosen ? "bg-accent" : "bg-fg-5"}`}
-                  style={{ transform: `scaleX(${p})` }}
-                />
-              </div>
-              <span className="text-end text-fg-4">{pct(p)}</span>
-            </div>
-          );
-        })}
+      <div className="flex flex-col gap-1">
+        <span className="pb-0.5 text-[12px] text-fg-4">Snap weighed all {blockIds.length} components</span>
+        {ranked.slice(0, lead).map((id) => (
+          <Weighed key={id} id={id} decision={decision} />
+        ))}
+        <AnimatePresence initial={false}>
+          {all && (
+            <motion.div
+              className="flex flex-col gap-1 overflow-hidden"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1, transition: { duration: 0.28, ease: easeOut } }}
+              exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: easeOut } }}
+            >
+              {ranked.slice(lead).map((id) => (
+                <Weighed key={id} id={id} decision={decision} />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <div className="-ms-2">
+          <MoreToggle hidden={ranked.length - lead} open={all} onToggle={() => setAll((v) => !v)} />
+        </div>
       </div>
       <div className="flex flex-col gap-1 border-t border-line pt-3">
         {decision.extras?.length ? (
           <Row label="Also showing" value={decision.extras.map((id) => `${blocks[id].label} ${pct(decision.extraProbabilities?.[id] ?? 0)}`).join(", ")} />
         ) : null}
-        <Row label="Went back to" value={recallNumber != null ? `message ${recallNumber}, ${pct(decision.recallConfidence)}` : "nothing earlier"} />
-        <Row
-          label={shared > 12 ? `Picked from ${shared} files` : "From context"}
-          value={decision.artifacts.length ? decision.artifacts.map((id) => (artifacts[id] ? base(artifacts[id].name) : id)).join(", ") : "none"}
-        />
+        {recallNumber != null && <Row label="Went back to" value={`message ${recallNumber}, ${pct(decision.recallConfidence)}`} />}
+        {decision.artifacts.length > 0 && (
+          <Row label={shared > 12 ? `Picked from ${shared} files` : "Picked"} value={<Picked names={decision.artifacts.map((id) => (artifacts[id] ? base(artifacts[id].name) : id))} />} />
+        )}
+        {decision.images > 0 && <Row label="Images looked at" value={decision.images} />}
         <Row label="Length" value={DEPTHS[decision.depth] ?? DEPTHS[1]} />
-        <Row label="Images looked at" value={decision.images} />
         <Row label="Read" value={`${decision.inputTokens.toLocaleString("en")} tokens`} />
-        <Row label="Decided in" value={secs(decision.ms)} />
-        <Row label="Cost" value={`${cost(decision.inputTokens)}, at $${USD_PER_MILLION} per million tokens`} />
-        {writer && <Row label="Written by" value={`${writer}${writeMs ? `, ${secs(writeMs)}` : ""}`} />}
+        <Row label="Cost" value={cost(decision.inputTokens)} />
+        {writer && <Row label="Written by" value={`${model(writer)}${writeMs ? `, ${secs(writeMs)}` : ""}`} />}
       </div>
     </div>
   );
