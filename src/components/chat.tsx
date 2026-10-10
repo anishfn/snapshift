@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { PlusIcon, SidebarIcon, SparkleIcon } from "@/components/icons";
-import { codebaseConversation, demoConversation, suggestions as demoSuggestions } from "@/lib/demo/seed";
+import { codebaseConversation, demoConversation, suggestions as demoSuggestions, supportConversation } from "@/lib/demo/seed";
 import { readFile, TEXT_TYPES } from "@/lib/files";
 import { MAX_FILES, tokensOf } from "@/lib/sources";
 import type { Artifact } from "@/lib/types";
@@ -77,6 +77,7 @@ export function Chat() {
   const newChat = () => replace(empty());
   const openDemo = async () => replace(await demoConversation());
   const openCodebase = async () => replace(await codebaseConversation());
+  const openSupport = async () => replace(await supportConversation());
   const openSaved = async (id: string) => {
     if (id === conv.id) return setDrawer(false);
     setDocId(null);
@@ -207,6 +208,7 @@ export function Chat() {
         onNew={newChat}
         onDemo={openDemo}
         onCodebase={openCodebase}
+        onSupport={openSupport}
         onDelete={chat.remove}
         instant={!loaded}
       />

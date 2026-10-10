@@ -80,10 +80,13 @@ export function VerdictSkeleton() {
 /* ---------- table: sort by any column, numbers to the right, long tables fold ---------- */
 
 const FOLD = 8;
-/** A cell as a number, if it reads as one: "$1,284", "12.5%", "229 KB". */
+/**
+ * A cell as a number, if the whole cell reads as one: "$1,284", "12.5%", "229 KB", "-$64.30". A sentence or an id
+ * with a digit in it ("Rule 2: duplicate charge", "T-1031", "2019-2020") is text, and stays on the left.
+ */
 const asNumber = (s?: string) => {
-  const m = s?.replace(/[,\s]/g, "").match(/^[^\d-]*(-?\d+(?:\.\d+)?)/);
-  return m ? Number(m[1]) : null;
+  const m = s?.replace(/[,\s]/g, "").match(/^([-+−])?(?:[^\w+−-]{1,2}|(?:Rs|USD|EUR|GBP|INR)\.?)?(\d+(?:\.\d+)?)\D{0,10}$/);
+  return m ? Number(m[2]) * (m[1] && m[1] !== "+" ? -1 : 1) : null;
 };
 
 export function Table({ data, settled }: BlockProps<TableData>) {

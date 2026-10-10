@@ -124,18 +124,16 @@ fill gliding between them.
 
 ## The writer
 
-Picked by `WRITER` in `.env.local` (else the first key present: OpenRouter, Gemini, SubQ):
+OpenRouter only ("remove gemini api key from readme and code, as we using open router only"); `WRITER=subq`
+switches to `subq-preview` once its early access opens.
 
-- **OpenRouter, free** (`WRITER=openrouter`, `OPENROUTER_API_KEY`, the current choice): `dots-studio/dots-3-note-preview:free`
-  (JSON-schema output, takes images), falling back to `nvidia/nemotron-3-super-120b-a12b:free` when it's busy. Of
-  the free models it was the only one to get the demo's launch checklist right; others only listed what was left,
-  were rate-limited upstream, or don't do JSON schema. Slow on the full demo (25 to 37s a reply) and the free tier
-  allows only so many requests a day; `OPENROUTER_MODEL` overrides it.
-- **Gemini** (`WRITER=gemini`, `GEMINI_API_KEY`): `gemini-3.6-flash`, 3 to 7s a reply on the same demo; 3.7 and 3.8
-  flash took 45 to 53s and flash-lite was fast but wrong.
-- **SubQ** (`WRITER=subq`): `subq-preview`, once its early access opens.
+- **OpenRouter, free** (`OPENROUTER_API_KEY`): `dots-studio/dots-3-note-preview:free` (JSON-schema output, takes
+  images), falling back to `nvidia/nemotron-3-super-120b-a12b:free` when it's busy. Of the free models it was the
+  only one to get the demo's launch checklist right; others only listed what was left, were rate-limited upstream,
+  or don't do JSON schema. Slow on the full demo (25 to 37s a reply) and the free tier allows only so many requests
+  a day; `OPENROUTER_MODEL` overrides it.
 
-OpenRouter and Gemini see the images Snap looked at and get documents as text. PDFs are turned into text on the
+The OpenRouter model sees the images Snap looked at and gets documents as text. PDFs are turned into text on the
 server (`src/lib/pdf.ts`, unpdf, page by page) before Snap or any writer sees them: the free OpenRouter model
 rejects a PDF outright ("Provider returned error"), and Snap only reads text, so it picked Options at 46% from a bare
 file name and Tree at 80% once it could read the PDF. A scan with no text layer is said to be unreadable, honestly.
@@ -163,10 +161,15 @@ the whole call.
   message). That is what lets a chat hold a whole codebase. This is file routing, not the dropped message-memory
   idea: **no separate memory layer**; Anish tried "Snap as the memory" for messages and other chats and dropped
   it the same day, don't bring it back unless asked.
-- **Two demos**: "Demo conversation" (54 messages, recall and images) and "Codebase demo" (this app's source, 54
-  files, 137k tokens, a snapshot from `scripts/codebase-demo.mjs`). A message with more than nine files shows six
-  and folds the rest behind "Show 48 more files".
-- The decision line also says how much Snap read (`· 137k tokens read`) and, when Snap picked documents, a chip
+- **Three demos**: "Demo conversation" (54 messages, recall and images), "Codebase demo" (this app's source, 61
+  files, 155k tokens, a snapshot from `scripts/codebase-demo.mjs`) and "Support desk demo" (an invented ticket
+  queue, a refund policy, a routing guide and two customer screenshots, in `public/demo/support/`; its image
+  captions say only whose they are, so the answer has to come from looking). A message with more than nine files
+  shows six and folds the rest behind "Show 48 more files".
+- **Small sets go to the writer whole.** Under about 10k tokens of documents in all, the writer gets every one,
+  whatever Snap picked: asked to reply to "the customer who was charged twice", Snap picked the policy and not the
+  ticket list, and the writer addressed the wrong person.
+- The decision line also says how much Snap read and what that cost (`· 155k tokens read · $0.014`) and, when Snap picked documents, a chip
   with the file's name that opens it in the panel.
 
 Component descriptions for Snap are in `src/lib/blocks.ts`: when Snap picks the wrong
@@ -235,3 +238,21 @@ test the UI without spending credits.
 - 2026-10-10: "Fix these excalidraw diagrams, and make simpler diagrams for all": all six redrawn simply, with
   labels beside the arrows instead of on them.
 - 2026-10-10: The app is called snapshift now: in the sidebar, the page title, the package and the repository.
+- 2026-10-10: "Remove gemini api key from readme and code, as we using open router only": the Gemini writer is
+  gone. "Also mention how cheap the snap calls are": the README says what is measured (one call a turn,
+  `output_tokens: 0`, the writer reads only the picked files) and gives no dollar figure, because SubQ publishes
+  no price for the Snap preview.
+- 2026-10-10: SubQ's four points for builders (long context, decision quality, multimodal, cents per decision) and
+  the price: $0.09 per million input tokens, $0.01 cached, output free. The decision line now ends with what the
+  decision cost (`· 2.2k tokens read · $0.0002`), worked out from the tokens Snap reports at the uncached price, with
+  a Cost row in "How Snap decided"; the README has a cost table (171k tokens: $0.015).
+- 2026-10-10: "Do the changes on the code and project which are needed first" (against SubQ's four points): the
+  Support desk demo for work decisions and images read beside documents; a table cell is a number only when the
+  whole cell reads as one ("Rule 2: duplicate charge" and "T-1031" stay on the left); the writer names images by
+  file name, never "(a5)"; the README opens with SubQ's four points against what was measured here, with SubQ's
+  own benchmark numbers quoted and marked as theirs. Speed, measured: about 97k tokens in 1.1 to 1.6s from a laptop.
+- 2026-10-10: Proof that Snap itself reads the pictures (`scripts/support-vision.mjs`): the ticket's team is
+  Technical 98% with the screenshots and 50% without; "charged twice" 98% with, 3% without. Claims about images
+  say which model did the reading: Snap for the decision, the writer for the words.
+- 2026-10-10: "Whats this, use $" about the cent sign on the decision line: costs are always written in dollars
+  (`$0.0002`, `$0.015`), never with ¢.

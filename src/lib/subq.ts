@@ -1,8 +1,8 @@
 import "server-only";
 
 // The two models, over plain fetch. Snap lives on SubQ's Decisions API (its own typed contract). The writer speaks
-// OpenAI-compatible Chat Completions: Gemini while subq-preview is in early access (it sees images too), or
-// subq-preview itself with WRITER=subq. Docs: https://docs.subq.ai, https://ai.google.dev/gemini-api/docs/openai
+// OpenAI-compatible Chat Completions: a free OpenRouter model while subq-preview is in early access (it sees images
+// too), or subq-preview itself with WRITER=subq. Docs: https://docs.subq.ai, https://openrouter.ai/docs
 
 // SUBQ_BASE_URL is only for pointing at a local stand-in while testing.
 const BASE = process.env.SUBQ_BASE_URL ?? "https://api.subq.ai/v1";
@@ -10,7 +10,7 @@ export const SNAP = "subq-snap-preview";
 
 /** Who writes the reply, and what it can take in. */
 export type Writer = {
-  name: "openrouter" | "gemini" | "subq";
+  name: "openrouter" | "subq";
   label: string;
   base: string;
   model: string;
@@ -22,8 +22,7 @@ export type Writer = {
 };
 
 export function writer(): Writer {
-  const choice =
-    process.env.WRITER ?? (process.env.OPENROUTER_API_KEY ? "openrouter" : process.env.GEMINI_API_KEY ? "gemini" : "subq");
+  const choice = process.env.WRITER ?? (process.env.OPENROUTER_API_KEY ? "openrouter" : "subq");
   if (choice === "openrouter") {
     return {
       name: "openrouter",
@@ -34,18 +33,6 @@ export function writer(): Writer {
       model: process.env.OPENROUTER_MODEL ?? "dots-studio/dots-3-note-preview:free",
       fallbacks: ["nvidia/nemotron-3-super-120b-a12b:free"],
       envKey: "OPENROUTER_API_KEY",
-      vision: true,
-      docs: "text",
-    };
-  }
-  if (choice === "gemini") {
-    return {
-      name: "gemini",
-      label: "Gemini",
-      base: "https://generativelanguage.googleapis.com/v1beta/openai",
-      // 3.6 flash: measured 4 to 5s on the 30k-token demo; 3.7 and 3.8 took 45 to 53s for the same reply.
-      model: process.env.GEMINI_MODEL ?? "gemini-3.6-flash",
-      envKey: "GEMINI_API_KEY",
       vision: true,
       docs: "text",
     };

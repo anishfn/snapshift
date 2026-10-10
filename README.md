@@ -21,16 +21,47 @@ A second model, **the writer**, then fills that in. Nothing gets summarised away
   images**, in one call, in about 2 seconds.
 - **More than one, when you ask for it.** "Plan a trip, map it and give me a budget" comes back as an itinerary, a
   map and a breakdown: still one Snap call (0.8 s), still one writer call.
-- **Long context is real.** The **Codebase demo** puts this app's whole source in one chat: 54 files, 137k tokens.
-  Snap reads all of it every turn, picks the right file and decides in about **3 seconds**. The writer is handed
-  only that file.
+- **Long context is real.** The **Codebase demo** puts this app's whole source in one chat: 61 files, 155k tokens.
+  Snap reads all of it every turn, picks the right file and decides in **2.6 to 4.1 seconds**. The writer is
+  handed only that file.
+- **It does real desk work, with pictures.** The **Support desk demo** is a day's ticket queue, a refund policy, a
+  routing guide and two screenshots customers sent. The error code that decides a ticket's team is only in a
+  screenshot: with the picture Snap was **98% sure** of the right team, without it **50%**. Each decision took 1
+  to 1.6 seconds and 0.05 cents.
 - **Bring in a whole repository.** Attach → **A GitHub repository**, paste `owner/repo`, see how much of Snap's
   384k it takes, untick folders, add. `pmndrs/zustand` (81 files, 112k tokens): Snap decided in 2.4 s and picked
   the 2 files the answer needed. Web pages work the same way.
+- **Cents per decision, or less.** Snap costs $0.09 per million input tokens and output is free. Reading the
+  171k-token chat and deciding costs **about 1.5 cents**; a normal short turn costs **about 0.02 cents**. The cost
+  of every decision is on screen, next to how long it took. The writer then gets only the files Snap picked, not
+  the whole context, and here the writer is a free model.
 - **Answers are real UI.** Charts you can hover, checklists you can tick, maps you can drag, quizzes you can take.
   What you do is saved.
 - **Files open on the right.** Click a PDF or doc and it slides into a side panel, like other assistants.
 - **Run it:** `bun install`, add keys to `.env.local`, `bun dev`, click **Try the demo conversation**.
+
+---
+
+## SubQ's four points, and where this app shows each
+
+SubQ describes Snap with four claims. This is what each one looks like here. The right-hand column is only what
+was measured in this app; SubQ's own benchmark numbers are quoted under the table and marked as theirs.
+
+| SubQ's point | Where to see it | Measured in this app |
+| --- | --- | --- |
+| **1. Long context** in a single call, no chunking | **Codebase demo**, or attach a PDF and a GitHub repository to one chat | 155k tokens (61 files): 2.6 to 4.1 s, right file 3 of 3. A 164-page PDF plus a 111-file repository, 171k tokens: 2 to 3.4 s. 342k tokens: 4.8 s. |
+| **2. Decision quality on work tasks** | **Support desk demo**: routing tickets to teams, applying a refund policy | 5 of 5 questions got the right component (text, table, table, draft, chart). Tickets counted by team: 9, 4, 3, 2, 2, 1, matching a count by hand. |
+| **3. Text and images together** | The same demo: the facts that decide the answer are only in the screenshots | Asked Snap directly which team gets the ticket: **Technical 98%** with the screenshots, **Technical 50% / Billing 43%** without them. "Was this customer charged twice?": **98%** with the bank statement, **3%** without. Same result 3 runs of 3 (`node scripts/support-vision.mjs`). In the app, the reply quoted `PAY-5003` and the card's last digits, which exist only in the pictures. |
+| **4. Cents per decision** | The end of every decision line: `· 155k tokens read · $0.014` | A support desk turn: $0.0005. The Codebase demo: $0.014. The 171k-token chat: $0.015. |
+
+**SubQ's own numbers, not measured here:** up to 384K tokens of context; 100K tokens decided in under one second;
+99.8 on Decision RULER at 256K tokens and 74.0 on Decision LCR (Jev with a chunked workflow: 90.7 and 48.0); an
+average of 67.6 across 16 Decision Index benchmarks against Jev's 61.6, ahead on 13 of 16; $0.09 per million input
+tokens, $0.01 cached, output free.
+
+**On speed, honestly:** from a laptop, a call with about 97k tokens came back in 1.1 to 1.6 seconds, of which
+about 0.3 seconds is the round trip a tiny call also takes. One question or five in the call made no difference
+at that size.
 
 ---
 
@@ -40,6 +71,7 @@ A second model, **the writer**, then fills that in. Nothing gets summarised away
 | --- | --- | --- |
 | just run it | [Run it](#run-it) | 2 min |
 | understand what Snap is doing and why it's good | [What Snap does here](#what-snap-does-here) | 5 min |
+| see SubQ's four points against this app | [SubQ's four points](#subqs-four-points-and-where-this-app-shows-each) | 2 min |
 | see how one message turns into a chart | [One turn, step by step](#one-turn-step-by-step) | 4 min |
 | know which model writes and how to switch | [The writer](#the-writer) | 2 min |
 | see all 29 answer types | [The 29 components](#the-29-components) | 3 min |
@@ -64,15 +96,14 @@ Then click **Try the demo conversation**, and tap one of the suggested questions
 | Variable | Needed? | What it's for |
 | --- | --- | --- |
 | `SUBQ_API_KEY` | **yes** | SubQ Snap, the decider. Get one at [console.subq.ai](https://console.subq.ai). |
-| `OPENROUTER_API_KEY` | one writer key | The writer, using a free model. [openrouter.ai](https://openrouter.ai) |
-| `GEMINI_API_KEY` | one writer key | The writer, using Gemini (faster). |
-| `WRITER` | optional | `openrouter`, `gemini` or `subq`. If unset: the first key found, in that order. |
-| `OPENROUTER_MODEL` / `GEMINI_MODEL` | optional | Swap the writer's model. |
+| `OPENROUTER_API_KEY` | **yes** | The writer, using a free model. [openrouter.ai](https://openrouter.ai) |
+| `WRITER` | optional | `openrouter` (the default) or `subq`. |
+| `OPENROUTER_MODEL` | optional | Swap the writer's model. |
 | `GITHUB_TOKEN` | optional | Reading repositories works without it (public ones, 60 lookups an hour). A token raises the limit and reads private ones. |
 
 > [!TIP]
-> No credits to spare? Use OpenRouter's free model. Want it fast? Use Gemini. Want it all-SubQ? `WRITER=subq` once
-> `subq-preview` access opens up for your key.
+> The writer costs nothing: it is a free model on OpenRouter. Want it all-SubQ? `WRITER=subq` once `subq-preview`
+> access opens up for your key.
 
 <details>
 <summary><b>Other commands</b></summary>
@@ -116,20 +147,50 @@ readable text), so the writer knows what a picture is even when it can't see it.
 
 | Strength | What it looks like in the app | Measured |
 | --- | --- | --- |
-| **Long context, no summarising** | It reads the whole transcript, every file's text, and up to 4 images, every single turn. The meter in the header and the decision line show how much. | **Codebase demo**: 137k tokens read, decided in 2.5 to 3 s. Measured up to 342k tokens: 4.8 s, and the right file out of 61 every time (9 of 9). |
+| **Long context, no summarising** | It reads the whole transcript, every file's text, and up to 4 images, every single turn. The meter in the header and the decision line show how much. | **Codebase demo**: 155k tokens read, decided in 2.6 to 4.1 s. Measured up to 342k tokens: 4.8 s, and the right file out of 61 every time (9 of 9). |
 | **Real recall** | The **"From message 5"** chip. Click it and the chat scrolls there. | Found the WebGL rule from message 5 of 54. Found the launch list in message 37. Found a 229 KB budget in message 46 without being asked. |
 | **Picks the right files** | Comparison and gallery cards show exactly the images that matter. With documents, a chip names the file Snap picked, and the writer reads only that. | Picked the 3 non-WebGL share cards out of 6. Picked `map.tsx` out of 54 source files with 96%. |
-| **Picks the right UI** | The decision line: `Snap · Chart · 93% · 1.2s · 1.5k tokens read` | 12 of 12 plain questions got the intended component (recipe, quiz, map, chart, draft ...), then 10 of 10 for the newest four (calculator, timer, flashcards, before & after) without stealing from their neighbours |
+| **Picks the right UI** | The decision line: `Snap · Chart · 93% · 1.2s · 1.5k tokens read · $0.0001` | 12 of 12 plain questions got the intended component (recipe, quiz, map, chart, draft ...), then 10 of 10 for the newest four (calculator, timer, flashcards, before & after) without stealing from their neighbours |
 | **More than one component** | The decision line: `Snap · Itinerary + Map + Breakdown`, and three cards under it. | 24 of 24: all 8 questions that asked for two or three things got exactly those, and none of the 16 plain ones got an extra. No slower: about 0.8 s. |
 | **Fast** | The decision line and the component's skeleton appear before the writer has written a word. | ~0.9 s on short chats, ~2 s on the 30k-token demo with images |
 | **Honest confidence** | Click the decision line: every component it weighed, with its probability. | e.g. Comparison 81%, Text 13%, Decision 3% |
-| **Images** | Attach a screenshot and the chip says `Snap: Screenshot, dark, text`. | One call per image, a few hundred ms |
+| **Images** | Attach a screenshot and the chip says `Snap: Screenshot, dark, text`. In the Support desk demo the screenshots are read together with the documents. | One call per image, a few hundred ms. Up to 4 images ride along with every decision. |
 | **No agent loop** | No tools, no "let me search". One call decides, one call writes. | 2 model calls per turn, always |
+| **Cents per decision** | The decision line ends with what it cost: `· 171k tokens read · $0.015`. | $0.09 per million input tokens, output free. A short turn: $0.0002. The 171k-token chat: $0.015. |
 
 > [!NOTE]
 > **What Snap doesn't do:** it doesn't write the answer, and it can't read a PDF's bytes. So the server turns
 > every PDF into text first. Before that fix, Snap picked **Options at 46%** for a PDF it could only see the name
 > of. After it, it picked **Tree at 80%**, because it could read the family tree inside.
+
+### What a Snap call costs
+
+Short version: **input tokens, once a turn, and nothing else.** Snap's price is **$0.09 per million input
+tokens** ($0.01 when cached), and **output tokens are free**.
+
+| A turn in... | Snap reads | One decision costs |
+| --- | --- | --- |
+| a fresh chat, a short question | 2.6k tokens | $0.0002 |
+| the 54-message demo | 30k tokens | $0.0027 |
+| the Support desk demo | 5.9k tokens | $0.0005 |
+| the Codebase demo | 155k tokens | $0.014 |
+| a 164-page PDF plus a 111-file repository | 171k tokens | $0.015 |
+| a completely full context | 384k tokens | $0.035 |
+
+A dollar buys about 4,000 short decisions, or 65 that each read a 171k-token chat. These are worked out from the
+token count Snap reports and the list price, without the cached rate, so they are the most a call can cost.
+
+- **No output tokens.** Snap never writes, so every call comes back with `"output_tokens": 0`. Output tokens are
+  the expensive half of most model bills; a decision has none.
+- **One call, five answers.** The component, the extras, the earlier message, the files and the length all come
+  from the same call. No agent loop, and no second "now pick the files" request.
+- **It makes the writer cheaper too.** In the 171k-token chat Snap reads everything, and the writer is handed the
+  one or two files Snap picked. The model that writes (and bills output) never has to read the whole context.
+- **Small turns are small.** A plain question in a fresh chat is a few thousand input tokens, most of it the 29
+  component descriptions: the decision line showed `2.6k tokens read` for a follow-up about a pie chart.
+
+What each call used and cost is on screen: the decision line shows it, and clicking it shows **Read** and
+**Cost** in full.
 
 ### Snap vs. a normal chatbot
 
@@ -186,14 +247,16 @@ Things that bit us, so you don't have to find them again:
 
 ---
 
-## The two demos
+## The three demos
 
 | Demo | What's in it | Try | What it shows |
 | --- | --- | --- | --- |
 | **Demo conversation** | 54 messages, 6 images, an 80 KB document (about 30k tokens) | "Which three should go on the homepage?" | recall from 50 messages back, the right 3 images of 6 |
-| **Codebase demo** | this app's own source: 54 files, 137k tokens | "Which file draws the map, and which tile server does it use?" | long context: Snap reads all 137k, picks `map.tsx`, decides in about 3 s; the writer reads one file |
+| **Codebase demo** | this app's own source: 61 files, 155k tokens | "Which file draws the map, and which tile server does it use?" | long context: Snap reads all 155k, picks `map.tsx`, decides in 2.6 to 4.1 s; the writer reads one file |
+| **Support desk demo** | a made-up notes app's support queue: 24 tickets (CSV), a refund policy, a routing guide, and 2 screenshots customers attached | "Look at the checkout screenshot: which team gets that ticket, and why?" | work decisions with pictures: the error code is only in the screenshot, and the routing guide says which team owns it |
 
-The codebase is a snapshot. After changing the code: `node scripts/codebase-demo.mjs`.
+The codebase is a snapshot. After changing the code: `node scripts/codebase-demo.mjs`. The support desk's files
+are in `public/demo/support/`; the company, the customers and the screenshots are invented for the demo.
 
 ---
 
@@ -215,7 +278,7 @@ Everything travels as **NDJSON**, one JSON object per line:
 ```jsonc
 {"type":"decision","decision":{"component":"checklist","confidence":0.92,"recall":"m37","artifacts":[],"depth":1,"ms":2100,"inputTokens":29789}}
 {"type":"partial","text":"Going by your launch list...","data":{"title":"Before October 20","items":[{"text":"Homepage share image"}]}}
-{"type":"done","text":"...","data":{...},"writeMs":5500,"writer":"gemini-3.6-flash"}
+{"type":"done","text":"...","data":{...},"writeMs":5500,"writer":"dots-studio/dots-3-note-preview:free"}
 ```
 
 <details>
@@ -226,8 +289,9 @@ Code: `src/lib/prompt.ts`. The writer gets:
 - the full conversation as chat messages, each user message labelled `[message N]`
 - documents as text, but **only the ones Snap picked** for this reply, plus any attached to the newest message.
   The rest are mentioned as "shared here, not attached". This is what lets a chat hold a whole codebase: Snap
-  reads 137k tokens, the writer reads one file.
-- the images Snap looked at (OpenRouter and Gemini can see them)
+  reads 155k tokens, the writer reads one file. When everything shared is small (under about 10k tokens in all)
+  the writer gets all of it: picking is for when there is too much to hand over.
+- the images Snap looked at (the OpenRouter model can see them)
 - Snap's decision, in plain words: the component, how long to write, the recalled message quoted in full, and
   the files Snap picked
 - the component's **JSON schema**, so the reply is guaranteed to fit the component (with extra components, one
@@ -236,7 +300,7 @@ Code: `src/lib/prompt.ts`. The writer gets:
   asked for, never invent chart numbers or URLs
 
 Rules that must hold even deep in a long conversation (like "3 questions means 3") are written into the schema's
-field descriptions too. Gemini ignored them in the system prompt at 30k tokens; in the schema it listened.
+field descriptions too. At 30k tokens a writer ignored them in the system prompt; in the schema it listened.
 
 </details>
 
@@ -247,10 +311,9 @@ field descriptions too. Gemini ignored them in the system prompt at 30k tokens; 
 | Writer | Model | Speed on the 30k demo | Notes |
 | --- | --- | --- | --- |
 | **OpenRouter** (default when its key is set) | `dots-studio/dots-3-note-preview:free` | 25 to 37 s | Free. Sees images. Falls back to Nemotron 3 Super when busy. Free tier has a daily limit. |
-| **Gemini** | `gemini-3.6-flash` | 3 to 7 s | Fast and accurate. 3.7 and 3.8 flash took 45 to 53 s for the same reply. |
 | **SubQ** | `subq-preview` | not yet measured | Early access. Our key gets `403` today. |
 
-Switch with one line in `.env.local`: `WRITER=gemini`. "How Snap decided" (click the decision line) always
+Switch with one line in `.env.local`: `WRITER=subq`. "How Snap decided" (click the decision line) always
 says which model wrote the reply and how long it took.
 
 **Safety nets on the server** (`src/app/api/turn/route.ts`, `src/lib/subq.ts`):
@@ -339,7 +402,7 @@ The **Attach** button opens a small menu:
 
 | You add... | In the browser | On the server | Snap sees | The writer sees |
 | --- | --- | --- | --- | --- |
-| an image | shrunk to 1280px WebP | passed through | the image (up to 4 a turn) + its tags | the image (OpenRouter, Gemini) |
+| an image | shrunk to 1280px WebP | passed through | the image (up to 4 a turn) + its tags | the image (OpenRouter) |
 | a repository or a web page | chosen in the dialog | fetched from GitHub (raw files) or the page's address | the text of every file | only the files Snap picked |
 | a PDF | kept as is | **read into text, page by page** | the text | the text |
 | Markdown / text / CSV / JSON | read as text | passed through | the text | the text |
@@ -379,7 +442,7 @@ src/
     globals.css               the dark palette as tokens, chart colours
   lib/
     decide.ts                 builds Snap's state + questions, reads its answers
-    subq.ts                   talks to Snap and the writers (OpenRouter, Gemini, SubQ)
+    subq.ts                   talks to Snap and the writers (OpenRouter, SubQ)
     prompt.ts                 what the writer is told
     blocks.ts                 the 29 components: Snap's descriptions + writer schemas
     pdf.ts                    PDFs into text (server)
@@ -409,8 +472,8 @@ docs/diagrams/                these diagrams: .svg to view, .excalidraw to edit
 | You see | What it means | Fix |
 | --- | --- | --- |
 | `Add SUBQ_API_KEY to .env.local` | no Snap key | add it, restart |
-| `This key can't use subq-preview yet` | the SubQ writer is early access | set `WRITER=openrouter` or `gemini` |
-| `OpenRouter's free models are busy, or the free daily limit is used up` | free tier limit | wait, add credits, or `WRITER=gemini` |
+| `This key can't use subq-preview yet` | the SubQ writer is early access | set `WRITER=openrouter` |
+| `OpenRouter's free models are busy, or the free daily limit is used up` | free tier limit | wait, or add credits |
 | `The chart didn't come through` | the writer finished but left the component empty | **Ask again** |
 | `GitHub's hourly limit is used up` | 60 repository lookups an hour without a token | wait, or add `GITHUB_TOKEN` to `.env.local` |
 | `Couldn't find that repository` | a typo, or it's private | check the name; private ones need `GITHUB_TOKEN` |
