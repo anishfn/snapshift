@@ -91,6 +91,8 @@ export const suggestions = [
   "How did the folder maker evolve?",
 ];
 
+const SOURCE = { kind: "github", label: "anishfn/snapshift", url: "https://github.com/anishfn/snapshift" } as const;
+
 /**
  * The second demo: this app's own source, every file in one chat. About 155k tokens that Snap reads on each
  * turn; the writer is handed only the file Snap picks. The files are a snapshot (scripts/codebase-demo.mjs).
@@ -100,7 +102,8 @@ export async function codebaseConversation(): Promise<Conversation> {
   const artifacts: Record<string, Artifact> = {};
   files.forEach((f, i) => {
     const id = `a${i + 1}`;
-    artifacts[id] = { id, kind: "doc", name: f.name, mediaType: "text/plain", text: f.text, bytes: f.text.length };
+    // one source, so the message shows one chip that unfolds, the way an attached repository does
+    artifacts[id] = { id, kind: "doc", name: f.name, mediaType: "text/plain", text: f.text, bytes: f.text.length, source: SOURCE };
   });
   const at = Date.now() - 10 * 60 * 1000;
   const messages: Message[] = [

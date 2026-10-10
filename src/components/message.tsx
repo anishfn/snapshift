@@ -28,15 +28,22 @@ const DOC_LABEL: Record<string, string> = {
   text: "Text",
 };
 
-/** A document in a message: opens in the panel on the right. */
+/**
+ * A document in a message: opens in the panel on the right. Every chip is the same width, so several of them line
+ * up as a grid instead of a ragged pile, and a file from a folder leads with its own name (the part that tells
+ * files apart) with the folder underneath, where a long path can be cut short without hiding it.
+ */
 function DocChip({ a }: { a: Artifact }) {
   const viewer = useContext(DocViewerContext);
+  const slash = a.name.lastIndexOf("/");
+  const kind = DOC_LABEL[docKind(a.mediaType, a.name)] ?? "Document";
   return (
     <button
       type="button"
       onClick={() => viewer.open(a.id)}
       aria-label={`Open ${a.name}`}
-      className={`focus-ring flex h-12 max-w-[16rem] items-center gap-2.5 rounded-[12px] bg-control p-1.5 pe-3 text-start transition-[background-color,box-shadow] duration-200 hover:bg-control-hover ${
+      title={a.name}
+      className={`focus-ring flex h-12 w-[13.5rem] max-w-full items-center gap-2.5 rounded-[12px] bg-control p-1.5 pe-3 text-start transition-[background-color,box-shadow] duration-200 hover:bg-control-hover ${
         viewer.openId === a.id ? "shadow-[inset_0_0_0_1px_var(--line-strong)]" : ""
       }`}
     >
@@ -44,8 +51,8 @@ function DocChip({ a }: { a: Artifact }) {
         <NoteIcon size={16} />
       </span>
       <span className="flex min-w-0 flex-col">
-        <span className="truncate text-[13px] text-fg">{a.name}</span>
-        <span className="text-[11px] text-fg-5">{DOC_LABEL[docKind(a.mediaType, a.name)] ?? "Document"}</span>
+        <span className="truncate text-[13px] text-fg">{slash < 0 ? a.name : a.name.slice(slash + 1)}</span>
+        <span className="truncate text-[11px] text-fg-5">{slash < 0 ? kind : a.name.slice(0, slash)}</span>
       </span>
     </button>
   );

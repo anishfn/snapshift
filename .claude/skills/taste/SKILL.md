@@ -261,3 +261,7 @@ test the UI without spending credits.
   behind "Show 24 more"; rows that say nothing ("nothing earlier", "none", 0 images) are left out; no row wraps
   (cost is just the amount, the writer is the model's short name, picked files are the first name and "+1").
   Popovers stay short: what matters first, the full list on request.
+- 2026-10-11: "Looks bad design" about the Codebase demo's files (six chips of different widths in a ragged
+  right-aligned pile, paths cut off before the file name): the demo's source is one chip that unfolds, like an
+  attached repository; file chips are all one width so they sit in a grid; a chip leads with the file's own name
+  and puts its folder underneath. Never a ragged wrap of different-width chips.
