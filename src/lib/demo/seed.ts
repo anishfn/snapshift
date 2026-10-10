@@ -84,13 +84,6 @@ const checklist = {
   ],
 };
 
-export const suggestions = [
-  "Which three should go on the homepage?",
-  "Show me everything I've shared",
-  "What's left before launch?",
-  "How did the folder maker evolve?",
-];
-
 const SOURCE = { kind: "github", label: "anishfn/snapshift", url: "https://github.com/anishfn/snapshift" } as const;
 
 /**
@@ -116,12 +109,6 @@ export async function codebaseConversation(): Promise<Conversation> {
     title: "This app's source",
     messages,
     artifacts,
-    suggestions: [
-      "Which file draws the map, and which tile server does it use?",
-      "Where do we make sure a quiz has exactly as many questions as asked? Show me that code.",
-      "How does the document panel on the right get resized?",
-      "Draw the folder structure of src as a tree.",
-    ],
   };
 }
 
@@ -164,13 +151,6 @@ export async function supportConversation(): Promise<Conversation> {
     title: "Support desk",
     messages,
     artifacts,
-    suggestions: [
-      "Look at the checkout screenshot: which team gets that ticket, and why?",
-      "Which refund requests do we approve under the policy, and which do we turn down?",
-      "Route every open ticket to a team, with a priority.",
-      "Draft the reply to the customer who was charged twice.",
-      "Chart the open tickets by team.",
-    ],
   };
 }
 

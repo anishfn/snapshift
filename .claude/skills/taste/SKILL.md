@@ -100,8 +100,8 @@ component, the reply says so with Ask again; it never just vanishes.
   from `public/pdf.worker.min.mjs`), lazily, at screen density, with a page counter, zoom and a Text view;
   Markdown renders, CSV/TSV become a table, JSON is indented and coloured. Copy text, download, close; Escape
   closes unless an image viewer is on top; focus returns to the chip. Images in messages open the Lightbox.
-- Suggestion chips are always one row that scrolls sideways: wrapped, they crowded the chat once the panel
-  narrowed it.
+- No suggested questions above the message box ("dont show these questions below"): the demos open with their
+  seeded messages and an empty box; questions to try live in the README.
 
 ## Bringing things in
 
@@ -265,3 +265,5 @@ test the UI without spending credits.
   right-aligned pile, paths cut off before the file name): the demo's source is one chip that unfolds, like an
   attached repository; file chips are all one width so they sit in a grid; a chip leads with the file's own name
   and puts its folder underneath. Never a ragged wrap of different-width chips.
+- 2026-10-11: "Dont show these questions below" about the row of suggested questions above the composer: removed
+  everywhere, code and data. The box stays clean; nothing sits between the chat and where you type.
