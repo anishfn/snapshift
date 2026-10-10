@@ -81,8 +81,6 @@ export type Conversation = {
   artifacts: Record<string, Artifact>;
   /** Snap's last measured input, the honest number for the meter. */
   lastInputTokens?: number;
-  /** Questions to try, offered above the composer (the demos set these). */
-  suggestions?: string[];
 };
 
 /** A conversation as the sidebar lists it. */

@@ -114,7 +114,6 @@ const MENU = "focus-ring flex h-9 w-full items-center gap-2.5 rounded-[10px] px-
 export function Composer({
   attachments,
   busy,
-  suggestions,
   onSend,
   onFiles,
   onSource,
@@ -129,7 +128,6 @@ export function Composer({
   onText: (text: string) => void;
   attachments: Artifact[];
   busy: boolean;
-  suggestions: string[];
   onSend: (text: string) => void;
   onFiles: (files: File[]) => void;
   onRemove: (id: string) => void;
@@ -159,26 +157,6 @@ export function Composer({
 
   return (
     <div className="flex flex-col gap-2.5">
-      <AnimatePresence initial={false}>
-        {suggestions.length > 0 && !text && (
-          <motion.ul {...chip} className="no-scrollbar -mx-5 flex gap-1.5 overflow-x-auto px-5" aria-label="Try asking">
-            {suggestions.map((s) => (
-              <li key={s}>
-                <motion.button
-                  type="button"
-                  whileTap={press}
-                  disabled={busy}
-                  onClick={() => submit(s)}
-                  className="focus-ring h-8 shrink-0 rounded-[10px] bg-raised px-3 text-[13px] whitespace-nowrap text-fg-2 shadow-faint transition-colors hover:bg-white/[0.06] hover:text-fg disabled:text-fg-5"
-                >
-                  {s}
-                </motion.button>
-              </li>
-            ))}
-          </motion.ul>
-        )}
-      </AnimatePresence>
-
       <div className="field-focus flex flex-col gap-2 rounded-[20px] bg-raised p-2 transition-shadow duration-200">
         <AnimatePresence initial={false}>
           {attachments.length > 0 && (

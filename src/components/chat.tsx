@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { PlusIcon, SidebarIcon, SparkleIcon } from "@/components/icons";
-import { codebaseConversation, demoConversation, suggestions as demoSuggestions, supportConversation } from "@/lib/demo/seed";
+import { codebaseConversation, demoConversation, supportConversation } from "@/lib/demo/seed";
 import { readFile, TEXT_TYPES } from "@/lib/files";
 import { MAX_FILES, tokensOf } from "@/lib/sources";
 import type { Artifact } from "@/lib/types";
@@ -161,9 +161,6 @@ export function Chat() {
     setTimeout(() => setFlash((f) => (f === id ? null : f)), 1800);
   };
 
-  const asked = new Set(conv.messages.map((m) => m.text));
-  const isDemo = conv.messages.some((m) => m.seeded);
-  const suggestions = (conv.suggestions ?? (isDemo ? demoSuggestions : [])).filter((s) => !asked.has(s));
   const lastSeeded = conv.messages.findLastIndex((m) => m.seeded);
   const indexOf = new Map(conv.messages.map((m, i) => [m.id, i]));
   const isEmpty = loaded && !conv.messages.length;
@@ -183,7 +180,6 @@ export function Chat() {
         onText={setDraft}
         attachments={attached.map((id) => conv.artifacts[id]).filter(Boolean)}
         busy={busy}
-        suggestions={busy ? [] : suggestions}
         onSend={send}
         onFiles={onFiles}
         onSource={setSource}

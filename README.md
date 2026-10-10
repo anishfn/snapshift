@@ -89,7 +89,7 @@ cp .env.local.example .env.local   # or create it, see below
 bun dev                            # http://localhost:3000
 ```
 
-Then click **Try the demo conversation**, and tap one of the suggested questions.
+Then click **Try the demo conversation** and ask it something, for example "Which three should go on the homepage?" (more questions to try are in [The three demos](#the-three-demos)).
 
 ### Keys (`.env.local`)
 
@@ -254,6 +254,12 @@ Things that bit us, so you don't have to find them again:
 | **Demo conversation** | 54 messages, 6 images, an 80 KB document (about 30k tokens) | "Which three should go on the homepage?" | recall from 50 messages back, the right 3 images of 6 |
 | **Codebase demo** | this app's own source: 61 files, 155k tokens | "Which file draws the map, and which tile server does it use?" | long context: Snap reads all 155k, picks `map.tsx`, decides in 2.6 to 4.1 s; the writer reads one file |
 | **Support desk demo** | a made-up notes app's support queue: 24 tickets (CSV), a refund policy, a routing guide, and 2 screenshots customers attached | "Look at the checkout screenshot: which team gets that ticket, and why?" | work decisions with pictures: the error code is only in the screenshot, and the routing guide says which team owns it |
+
+More to ask, typed into the box:
+
+- **Demo conversation:** "Show me everything I've shared" · "What's left before launch?" · "How did the folder maker evolve?"
+- **Codebase demo:** "Where do we make sure a quiz has exactly as many questions as asked? Show me that code." · "Draw the folder structure of src as a tree."
+- **Support desk demo:** "Route every open ticket to a team, with a priority." · "Which refund requests do we approve under the policy, and which do we turn down?" · "Draft the reply to the customer who was charged twice." · "Chart the open tickets by team."
 
 The codebase is a snapshot. After changing the code: `node scripts/codebase-demo.mjs`. The support desk's files
 are in `public/demo/support/`; the company, the customers and the screenshots are invented for the demo.
@@ -458,7 +464,7 @@ src/
     message.tsx               a message, its attachments, Copy / Ask again
     decision-line.tsx         "Snap · Chart · 93% · 1.2s" and its breakdown
     context-meter.tsx         how much Snap is holding
-    composer.tsx              the input, the attach menu, attachments, suggestions
+    composer.tsx              the input, the attach menu, attachments
     sources/source-dialog.tsx the "add a repository / a web page" dialog
     blocks/                   the 29 components
     viewer/                   the right panel: PDF pages, Markdown, CSV, JSON
